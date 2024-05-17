@@ -1,6 +1,5 @@
 package com.monolithic.demo.dto.request;
 
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

@@ -1,6 +1,6 @@
 package com.monolithic.demo.exception;
 
-public class AppException extends RuntimeException{
+public class AppException extends RuntimeException {
 
     private ErrorCode errorCode;
 

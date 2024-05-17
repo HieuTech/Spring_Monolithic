@@ -1,27 +1,31 @@
 package com.monolithic.demo.entity;
 
+import java.time.LocalDate;
+import java.util.Set;
+
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UniqueElements;
-
-import java.time.LocalDate;
 
 @Entity
-@Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Data
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     String username;
     String password;
     String firstName;
     String lastName;
-   LocalDate dob;
+    LocalDate dob;
+
+    @ManyToMany
+    Set<Roles> roles;
 }

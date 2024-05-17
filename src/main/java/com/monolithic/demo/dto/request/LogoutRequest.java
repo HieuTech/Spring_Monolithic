@@ -1,15 +1,13 @@
-package com.monolithic.demo.dto.response;
+package com.monolithic.demo.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class
-AuthenticationResponse {
+public class LogoutRequest {
     String token;
-    boolean authenticated;
 }
