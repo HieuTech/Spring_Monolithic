@@ -84,13 +84,12 @@ public class AuthenService {
 
         var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
 
-
         Set<Roles> roles = new HashSet<>();
         roles.add(Roles.builder()
                 .name(PredefinedRole.USER_ROLE)
                 .build());
 
-//        log.info("User Info {}", userInfo);
+//        onBoard
         var user = userRepository.findByUsername(userInfo.getEmail()).orElseGet(()-> userRepository.save(User.builder()
                         .username(userInfo.getName())
                         .firstName(userInfo.getFamilyName())
@@ -98,8 +97,12 @@ public class AuthenService {
                         .roles(roles)
                 .build()));
 
+        var token = generateToken(user);
+
+
+        //Exchange Google Token To Server Token
         return AuthenticationResponse.builder()
-                .token(response.getAccessToken())
+                .token(token)
                 .build();
     }
 
