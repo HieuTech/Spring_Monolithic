@@ -7,16 +7,14 @@ import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
 
+import com.monolithic.demo.dto.request.*;
+import com.monolithic.demo.repository.OutboundIdentityClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.monolithic.demo.dto.request.AuthenRequest;
-import com.monolithic.demo.dto.request.IntrospectRequest;
-import com.monolithic.demo.dto.request.LogoutRequest;
-import com.monolithic.demo.dto.request.RefreshRequest;
 import com.monolithic.demo.dto.response.AuthenticationResponse;
 import com.monolithic.demo.dto.response.IntroSpectResponse;
 import com.monolithic.demo.entity.InvalidatedToken;
@@ -44,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenService {
     InvalidTokenRepository invalidatedTokenRepository;
     UserRepository userRepository;
+    OutboundIdentityClient outboundIdentityClient;
 
     @NonFinal
     @Value("${jwt.valid-duration}")
@@ -56,6 +55,35 @@ public class AuthenService {
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
+
+
+    @NonFinal
+    @Value("${outbound.client-id}")
+    protected String clientId;
+    @NonFinal
+    @Value("${outbound.secret-id}")
+    protected String secretId;
+    @NonFinal
+    @Value("${outbound.uri-redirect}")
+    protected String uriRedirect;
+    @NonFinal
+    @Value("${outbound.grant-type}")
+    protected String grantType;
+
+    public AuthenticationResponse outboundAuthenResponse(String code) {
+        var response = outboundIdentityClient.exchangeToken(ExchangeTokenRequest.builder()
+                .code(code)
+                .clientId(clientId)
+                .clientSecret(secretId)
+                .redirectUri(uriRedirect)
+                .grantType(grantType)
+                .build());
+
+        log.info("TOKEN RESPONSE {}" + response);
+        return AuthenticationResponse.builder()
+                .token(response.getAccessToken())
+                .build();
+    }
 
     // key ko dc de static vì nó sẽ chạy trước hàm main, chưa kịp config để gán giá trị
     public IntroSpectResponse IntroSpect(IntrospectRequest request) throws JOSEException, ParseException {
@@ -112,11 +140,11 @@ public class AuthenService {
 
             Date expiriedTime = (isRefresh)
                     ? new Date(signedJWT
-                            .getJWTClaimsSet()
-                            .getIssueTime()
-                            .toInstant()
-                            .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
-                            .toEpochMilli())
+                    .getJWTClaimsSet()
+                    .getIssueTime()
+                    .toInstant()
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                    .toEpochMilli())
                     : signedJWT.getJWTClaimsSet().getExpirationTime();
             // Kiem tra key
             var verified = signedJWT.verify(verifier);

@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 // Khi enable thì sẽ có những cấu hình sẵn của spring security, vd như CORS, get các URL phải có token. quan li Session
@@ -20,7 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINT = {
-        "/users", "/auth/logout", "/auth/refresh", "/auth/token", "/auth/introspect"
+        "/users", "/auth/logout", "/auth/refresh", "/auth/token", "/auth/introspect", "/auth/outbound/authentication"
     };
 
     @Autowired
@@ -32,18 +35,18 @@ public class SecurityConfig {
 
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
                 .permitAll()
-                //                        .requestMatchers(HttpMethod.GET,"/users")
-                //                        .hasRole(Role.ADMIN.name())
-
                 .anyRequest()
                 .authenticated());
-
         httpSecurity.oauth2ResourceServer(
-                oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder((customJwtDecoder)))
+                oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder((customJwtDecoder)
+                        ))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
 
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
+        httpSecurity.oauth2ResourceServer((oauth2 -> oauth2.jwt(jwtConfigurer ->
+                jwtConfigurer.decoder(customJwtDecoder)
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter())).authenticationEntryPoint(new JwtAuthenticationEntryPoint())));
 
+        httpSecurity.csrf(AbstractHttpConfigurer::disable);
         // dang ky Authentication Provider
 
         return httpSecurity.build();
@@ -61,6 +64,17 @@ public class SecurityConfig {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
 
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public CorsFilter corsFilter(){
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 
     @Bean
