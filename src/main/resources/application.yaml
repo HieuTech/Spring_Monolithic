@@ -5,6 +5,7 @@ server:
 
 spring:
   datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/monolithic?createDatabaseIfNotExist=true
     username: root
     password: root
@@ -13,7 +14,7 @@ spring:
        ddl-auto: update
       show-sql: true
 
-  outbound:
+outbound:
     client-id: "59080131813-jk3cpt412lo0dkbkv3t20r7pufc56rcg.apps.googleusercontent.com"
     secret-id: "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"
     uri-redirect: "http://localhost:3000/authenticate"

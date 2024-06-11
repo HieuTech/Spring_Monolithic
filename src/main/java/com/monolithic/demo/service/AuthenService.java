@@ -3,12 +3,13 @@ package com.monolithic.demo.service;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
+import com.monolithic.demo.constant.PredefinedRole;
 import com.monolithic.demo.dto.request.*;
-import com.monolithic.demo.repository.OutboundIdentityClient;
+import com.monolithic.demo.entity.Roles;
+import com.monolithic.demo.repository.httpclient.OutboundIdentityClient;
+import com.monolithic.demo.repository.httpclient.OutboundUserClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,7 +44,7 @@ public class AuthenService {
     InvalidTokenRepository invalidatedTokenRepository;
     UserRepository userRepository;
     OutboundIdentityClient outboundIdentityClient;
-
+    OutboundUserClient outboundUserClient;
     @NonFinal
     @Value("${jwt.valid-duration}")
     protected long VALID_DURATION;
@@ -80,6 +81,23 @@ public class AuthenService {
                 .build());
 
         log.info("TOKEN RESPONSE {}" + response);
+
+        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
+
+
+        Set<Roles> roles = new HashSet<>();
+        roles.add(Roles.builder()
+                .name(PredefinedRole.USER_ROLE)
+                .build());
+
+//        log.info("User Info {}", userInfo);
+        var user = userRepository.findByUsername(userInfo.getEmail()).orElseGet(()-> userRepository.save(User.builder()
+                        .username(userInfo.getName())
+                        .firstName(userInfo.getFamilyName())
+                        .lastName(userInfo.getGivenName())
+                        .roles(roles)
+                .build()));
+
         return AuthenticationResponse.builder()
                 .token(response.getAccessToken())
                 .build();

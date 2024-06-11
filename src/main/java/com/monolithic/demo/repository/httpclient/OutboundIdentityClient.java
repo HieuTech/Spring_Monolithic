@@ -1,4 +1,4 @@
-package com.monolithic.demo.repository;
+package com.monolithic.demo.repository.httpclient;
 
 import com.monolithic.demo.dto.request.ExchangeTokenRequest;
 import com.monolithic.demo.dto.response.ExchangeTokenResponse;
